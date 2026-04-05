@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Asset Loader Manifest Sync",
+  "description": "When AssetLoader.js is edited, reminds the agent to keep the asset manifest steering file in sync with any added or removed assets.",
+  "version": "1.0.0",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["src/managers/AssetLoader.js"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "AssetLoader.js was just edited. Check if any assets were added or removed from the preload() method. If so, update .kiro/steering/asset-manisfest.md to reflect the changes — add new rows to the correct table (spritesheets, images, tilemaps, or audio) and remove any entries that no longer exist. Also remind the user to add the asset file to assets/CREDITS.txt if it's a new external asset."
+  }
+}
