@@ -126,6 +126,14 @@ export class GameScene extends Phaser.Scene {
     // Configurar colisiones
     this._setupCollisions();
 
+    // Agregar colisores con el tilemap para Kiro y enemigos
+    if (this._tilemapLayer) {
+      this.physics.add.collider(this._kiro, this._tilemapLayer);
+      for (const bug of this._bugs) {
+        this.physics.add.collider(bug, this._tilemapLayer);
+      }
+    }
+
     // Iniciar música de fondo
     this._soundManager.startMusic();
 
@@ -215,13 +223,18 @@ export class GameScene extends Phaser.Scene {
   }
 
   _loadTilemap(levelConfig) {
+    this._tilemapLayer = null;
     try {
       const map = this.make.tilemap({ key: levelConfig.tilemapKey });
       if (map) {
         const tileset = map.addTilesetImage('tileset', 'tileset');
         if (tileset) {
           const layer = map.createLayer('ground', tileset, 0, 0);
-          if (layer) map.setCollisionByProperty({ collides: true });
+          if (layer) {
+            map.setCollisionByProperty({ collides: true });
+            // Guardar referencia para agregar colisores después de crear entidades
+            this._tilemapLayer = layer;
+          }
         }
       }
     } catch (e) {
@@ -250,6 +263,9 @@ export class GameScene extends Phaser.Scene {
           const newWanderer = new Wanderer(this, spawnX, spawnY);
           this._bugs.push(newWanderer);
           this._setupBugCollisions(newWanderer);
+          if (this._tilemapLayer) {
+            this.physics.add.collider(newWanderer, this._tilemapLayer);
+          }
         });
       } else {
         console.warn(`GameScene: tipo de enemigo desconocido "${enemyDef.type}"`);
