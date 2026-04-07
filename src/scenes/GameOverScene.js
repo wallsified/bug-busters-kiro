@@ -41,8 +41,8 @@ export class GameOverScene extends Phaser.Scene {
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
     restartBtn.on('pointerdown', () => {
-      // Reiniciar desde el nivel 1
-      this.scene.start('GameScene', { level: 1 });
+      // Mostrar tutorial antes de reiniciar desde el nivel 1
+      this.scene.start('TutorialScene', { level: 1 });
     });
 
     // Efecto de parpadeo en el botón

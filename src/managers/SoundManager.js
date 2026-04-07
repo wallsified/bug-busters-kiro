@@ -37,10 +37,11 @@ export class SoundManager {
    * Si ya está reproduciéndose o el audio está silenciado, no hace nada.
    */
   startMusic() {
-    if (this.musicInstance) return;
+    // Evitar iniciar si ya hay música sonando en el sistema de audio global
+    if (this.scene.sound.get('loop')) return;
     if (this.muted) return;
     try {
-      this.musicInstance = this.scene.sound.add('loop', { loop: true });
+      this.musicInstance = this.scene.sound.add('loop', { loop: true, volume: 0.8 });
       this.musicInstance.play();
     } catch (e) {
       console.warn('SoundManager: no se pudo iniciar la música de fondo', e);
@@ -50,12 +51,14 @@ export class SoundManager {
 
   /**
    * Detiene la música de fondo si está reproduciéndose.
+   * Usa stopByKey para detener todas las instancias activas de la clave 'loop'.
    */
   stopMusic() {
-    if (this.musicInstance) {
-      try { this.musicInstance.stop(); } catch (e) { /* ignorar */ }
-      this.musicInstance = null;
-    }
+    try {
+      // Detener todas las instancias de 'loop' en el sistema de audio global
+      this.scene.sound.stopByKey('loop');
+    } catch (e) { /* ignorar */ }
+    this.musicInstance = null;
   }
 
   /**

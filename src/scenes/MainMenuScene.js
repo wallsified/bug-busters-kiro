@@ -57,9 +57,10 @@ export class MainMenuScene extends Phaser.Scene {
       fill: '#ffff00',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
-    // Al hacer clic, iniciar GameScene con los datos del nivel guardado
+    // Al hacer clic, enrutar a TutorialScene si es nivel 1, o directamente a GameScene
     startBtn.on('pointerdown', () => {
-      this.scene.start('GameScene', { level: progress.level });
+      const target = progress.level === 1 ? 'TutorialScene' : 'GameScene';
+      this.scene.start(target, { level: progress.level });
     });
 
     // Efecto de parpadeo para llamar la atención sobre el botón
@@ -82,6 +83,11 @@ export class MainMenuScene extends Phaser.Scene {
 
     // Overlay de scanlines sobre todos los elementos
     createScanlineOverlay(this);
+
+    // Iniciar música de fondo si no está ya sonando
+    if (!this.sound.get('loop')) {
+      this.sound.add('loop', { loop: true, volume: 0.8 }).play();
+    }
 
     // Aplicar el shader CRT si el renderer es WebGL
     if (this.renderer && this.renderer.type === Phaser.WEBGL) {

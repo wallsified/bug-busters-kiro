@@ -41,9 +41,7 @@ export class Module extends BaseSprite {
     if (typeof Phaser !== 'undefined' && scene && scene.add) {
       scene.add.existing(this);
       scene.physics.add.existing(this, true); // true = cuerpo estático
-      // Ocultar el sprite base y dibujar un rectángulo verde para identificar el módulo
       this.setVisible(false);
-      this._visual = scene.add.rectangle(x, y, 28, 28, 0x00ff88).setDepth(1);
     }
   }
 

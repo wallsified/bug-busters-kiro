@@ -48,6 +48,16 @@ export class ProjectileGroup extends BaseGroup {
     super(scene);
     // Referencia a la escena para acceder al sistema de física y límites del mundo
     this.scene = scene;
+    // Escala activa para nuevos proyectiles (1 = normal, BLAST_A_BUG_SCALE cuando activo)
+    this._blastScale = 1;
+  }
+
+  /**
+   * Establece la escala de los proyectiles disparados mientras Blast-a-Bug está activo.
+   * @param {number} scale - Factor de escala (1 = normal, 2.5 = Blast-a-Bug)
+   */
+  setBlastScale(scale) {
+    this._blastScale = scale;
   }
 
   /**
@@ -86,6 +96,13 @@ export class ProjectileGroup extends BaseGroup {
     // Calcular la velocidad según la dirección del disparo
     projectile.body.velocity.x = 0;
     projectile.body.velocity.y = 0;
+
+    // Aplicar escala de Blast-a-Bug si está activo
+    if (typeof projectile.setScale === 'function') {
+      projectile.setScale(this._blastScale);
+    } else if (projectile.scale !== undefined) {
+      projectile.scale = this._blastScale;
+    }
 
     if (direction === 'up') {
       projectile.body.velocity.y = -PROJECTILE_SPEED;

@@ -87,3 +87,79 @@ test('update refleja cambios de score en llamadas sucesivas', () => {
   expect(hud._scoreText._text).toBe('SCORE: 30');
   expect(hud._livesText._text).toBe('LIVES: 2');
 });
+
+// --- Tests de powerups automáticos en HUD ---
+
+test('constructor crea _blastABugText, _bugFreeZoneText y _extraLifeText con scrollFactor 0', () => {
+  const hud = new HUDManager(createMockScene());
+  expect(hud._blastABugText).not.toBeNull();
+  expect(hud._bugFreeZoneText).not.toBeNull();
+  expect(hud._extraLifeText).not.toBeNull();
+});
+
+test('constructor almacena null para textos de powerup cuando scene.add no está disponible', () => {
+  const hud = new HUDManager({});
+  expect(hud._blastABugText).toBeNull();
+  expect(hud._bugFreeZoneText).toBeNull();
+  expect(hud._extraLifeText).toBeNull();
+});
+
+test('update muestra "BAB: 20pts" cuando score es 0 y Blast-a-Bug no está activo', () => {
+  const hud = new HUDManager(createMockScene());
+  hud.update(0, 3, 1, {
+    blastABug: { active: false, remainingMs: 0 },
+    nextBlastABug: 20,
+    nextBugFreeZone: 40,
+    nextExtraLife: 100,
+  });
+  expect(hud._blastABugText._text).toBe('BAB: 20pts');
+});
+
+test('update muestra "BAB: 40pts" cuando score es 20', () => {
+  const hud = new HUDManager(createMockScene());
+  hud.update(20, 3, 1, {
+    blastABug: { active: false, remainingMs: 0 },
+    nextBlastABug: 40,
+    nextBugFreeZone: 40,
+    nextExtraLife: 100,
+  });
+  expect(hud._blastABugText._text).toBe('BAB: 40pts');
+});
+
+test('update muestra "BAB: Xs" cuando Blast-a-Bug está activo', () => {
+  const hud = new HUDManager(createMockScene());
+  hud.update(20, 3, 1, {
+    blastABug: { active: true, remainingMs: 3500 },
+    nextBlastABug: 40,
+    nextBugFreeZone: 40,
+    nextExtraLife: 100,
+  });
+  expect(hud._blastABugText._text).toBe('BAB: 4s');
+});
+
+test('update muestra "BFZ: 40pts" cuando score es 0', () => {
+  const hud = new HUDManager(createMockScene());
+  hud.update(0, 3, 1, {
+    blastABug: { active: false, remainingMs: 0 },
+    nextBlastABug: 20,
+    nextBugFreeZone: 40,
+    nextExtraLife: 100,
+  });
+  expect(hud._bugFreeZoneText._text).toBe('BFZ: 40pts');
+});
+
+test('update muestra "EL: 100pts" cuando score es 0', () => {
+  const hud = new HUDManager(createMockScene());
+  hud.update(0, 3, 1, {
+    blastABug: { active: false, remainingMs: 0 },
+    nextBlastABug: 20,
+    nextBugFreeZone: 40,
+    nextExtraLife: 100,
+  });
+  expect(hud._extraLifeText._text).toBe('EL: 100pts');
+});
+
+test('update no lanza error cuando powerState no tiene campos de powerup automático', () => {
+  const hud = new HUDManager(createMockScene());
+  expect(() => hud.update(0, 3, 1, {})).not.toThrow();
+});

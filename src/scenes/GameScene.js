@@ -17,6 +17,7 @@ import { SoundManager } from '../managers/SoundManager.js';
 import { HUDManager } from '../managers/HUDManager.js';
 import { EffectsManager } from '../managers/EffectsManager.js';
 import { PowerManager } from '../managers/PowerManager.js';
+import { PowerupBanner } from '../managers/PowerupBanner.js';
 import { ScoreSystem } from '../managers/ScoreSystem.js';
 
 export class GameScene extends Phaser.Scene {
@@ -43,7 +44,15 @@ export class GameScene extends Phaser.Scene {
     this._soundManager = new SoundManager(this);
     this._effectsManager = new EffectsManager(this);
     this._powerManager = new PowerManager(this);
+    this._banner = new PowerupBanner(this);
     this._scoreSystem = new ScoreSystem((score) => {
+      this._powerManager.checkMilestones(score, {
+        bugs: this._bugs,
+        kiro: this._kiro,
+        onLifeGained: () => { this._lives += 1; },
+        soundManager: this._soundManager,
+        banner: this._banner,
+      });
       this._powerManager.checkUnlocks(score, this._soundManager);
     });
     this._hudManager = new HUDManager(this);
@@ -201,7 +210,7 @@ export class GameScene extends Phaser.Scene {
       this._scoreSystem.getScore(),
       this._lives,
       this._currentLevel,
-      this._powerManager.getState()
+      this._powerManager.getState(this._scoreSystem.getScore())
     );
 
     // Verificar condición de victoria
