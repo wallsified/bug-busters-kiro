@@ -1,0 +1,12 @@
+{
+  "name": "Deploy to EC2",
+  "version": "1.0.0",
+  "description": "Copia deploy.sh a la instancia EC2 y lo ejecuta. Requiere EC2_PUBLIC_IP como variable de entorno o editar el comando con la IP real.",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "scp -i bug-busters-keys.pem scripts/deploy.sh ec2-user@${EC2_PUBLIC_IP}:/tmp/deploy.sh && ssh -i bug-busters-keys.pem ec2-user@${EC2_PUBLIC_IP} 'bash /tmp/deploy.sh'"
+  }
+}
