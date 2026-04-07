@@ -179,10 +179,7 @@ export class GameScene extends Phaser.Scene {
 
     // Colocar bomba con spacebar (flanco de subida)
     const spaceDown = this._spaceKey.isDown;
-    if (spaceDown && !this._spaceWasDown) {
-      console.log('[GameScene] SPACE pressed, placing bomb at', this._kiro.x, this._kiro.y);
-      this._placeBomb();
-    }
+    if (spaceDown && !this._spaceWasDown) this._placeBomb();
     this._spaceWasDown = spaceDown;
 
     // Activar poderes con Q (freeze) y E (patch_bomb)
@@ -209,6 +206,9 @@ export class GameScene extends Phaser.Scene {
 
     // Verificar condición de victoria
     this._checkWinCondition();
+
+    // Comprobar colisiones bomba ↔ bug manualmente
+    this._checkBombBugOverlaps();
   }
 
   _togglePause() {
@@ -308,12 +308,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   _setupBugCollisions(bug) {
-    this.physics.add.overlap(this._bombs, bug, (bomb, hitBug) => {
-      this._onBombHitBug(bomb, hitBug);
+    // Colisión bug ↔ Kiro
+    this.physics.add.overlap(bug, this._kiro, () => {
+      this._onBugHitKiro(bug);
     });
-    this.physics.add.overlap(bug, this._kiro, (hitBug) => {
-      this._onBugHitKiro(hitBug);
-    });
+    // Colisión bug ↔ módulos
     for (const mod of this._modules) {
       this.physics.add.overlap(bug, mod, (hitBug, hitMod) => {
         this._onBugHitModule(hitBug, hitMod);
@@ -321,10 +320,28 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Comprueba manualmente colisiones entre bombas activas y bugs activos.
+   * Se llama cada frame desde update().
+   */
+  _checkBombBugOverlaps() {
+    for (const bomb of this._bombs.getChildren()) {
+      if (!bomb || bomb.active === false) continue;
+      for (const bug of this._bugs) {
+        if (!bug || bug.active === false) continue;
+        const dx = bomb.x - bug.x;
+        const dy = bomb.y - bug.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 24) {
+          this._onBombHitBug(bomb, bug);
+        }
+      }
+    }
+  }
+
   _onBombHitBug(bomb, bug) {
     if (!bomb || bomb.active === false) return;
     if (!bug || bug.active === false) return;
-    console.log('[GameScene] bomb hit bug, bug.pointValue=', bug.pointValue, 'bug constructor=', bug.constructor?.name);
     this._bombs.detonateBomb(bomb);
     this._eliminateBug(bug);
   }
@@ -388,6 +405,7 @@ export class GameScene extends Phaser.Scene {
     if (this._transitioning) return;
     this._transitioning = true;
     this.time.timeScale = 1.0;
+    this._soundManager.stopMusic();
     this._soundManager.play('game_over');
     this.scene.start('GameOverScene', {
       score: this._scoreSystem.getScore(),

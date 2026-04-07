@@ -36,6 +36,7 @@ export class AssetLoader {
     scene.load.audio('sfx_life_lost', 'assets/audio/sfx_life_lost.mp3');
     scene.load.audio('game_over', 'assets/audio/game_over.mp3');
     scene.load.audio('music_game', 'assets/audio/music_game.mp3');
+    scene.load.audio('loop', 'assets/audio/loop.mp3');
 
     // Listener de errores: loguea el fallo y obtiene el asset de respaldo
     scene.load.on('loaderror', (file) => {
