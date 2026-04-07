@@ -35,6 +35,9 @@ export class Bug extends BaseSprite {
     // Referencia a la escena para acceder al reloj y otros sistemas
     this.scene = scene;
 
+    // Almacenar la clave de textura para acceso en pruebas y lógica de juego
+    this.texture = texture;
+
     // Registrar el sprite en la escena y habilitar la física
     if (scene && scene.add) {
       if (typeof Phaser !== 'undefined') {

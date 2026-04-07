@@ -77,3 +77,10 @@ test('update() dispara un cambio de dirección cuando el tiempo supera _nextDire
   expect(wanderer._dirChangeInterval).toBeGreaterThanOrEqual(CONSTANTS.WANDERER_DIR_CHANGE_MIN);
   expect(wanderer._dirChangeInterval).toBeLessThanOrEqual(CONSTANTS.WANDERER_DIR_CHANGE_MAX);
 });
+
+test('Wanderer se crea con la clave de textura "wanderer"', () => {
+  const scene = createMockScene(0);
+  const wanderer = new Wanderer(scene, 100, 200);
+  // La clave de textura se pasa al constructor de Bug como tercer argumento
+  expect(wanderer.texture).toBe('wanderer');
+});

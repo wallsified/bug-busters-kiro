@@ -140,14 +140,16 @@ describe('Preservation 2 — Límite de proyectiles (Property 4)', () => {
     group.fire(20, 20, 'up');
     group.fire(30, 30, 'left');
 
+    // PROJECTILE_LIMIT fue removido de CONSTANTS en gameplay-overhaul; valor histórico = 3
+    const PROJECTILE_LIMIT = 3;
     const countBefore = group.getChildren().filter(p => p.active).length;
-    expect(countBefore).toBe(CONSTANTS.PROJECTILE_LIMIT);
+    expect(countBefore).toBe(PROJECTILE_LIMIT);
 
     // Intentar disparar un cuarto proyectil
     group.fire(40, 40, 'down');
 
     const countAfter = group.getChildren().filter(p => p.active).length;
-    expect(countAfter).toBe(CONSTANTS.PROJECTILE_LIMIT);
+    expect(countAfter).toBe(PROJECTILE_LIMIT);
   });
 
   test('Property 4: fire() con 3 activos no modifica los proyectiles existentes', () => {
@@ -193,7 +195,8 @@ describe('Preservation 2 — Límite de proyectiles (Property 4)', () => {
           group.fire(50, 50, dir);
 
           const activeCount = group.getChildren().filter(p => p.active).length;
-          return activeCount === CONSTANTS.PROJECTILE_LIMIT;
+          // PROJECTILE_LIMIT fue removido de CONSTANTS en gameplay-overhaul; valor histórico = 3
+          return activeCount === 3;
         }
       ),
       { numRuns: 100 }

@@ -115,6 +115,6 @@
     - **EXPECTED OUTCOME**: All tests PASS (confirms no regressions)
     - Confirm all existing correct behaviors are unaffected by the eight fixes
 
-- [-] 4. Checkpoint — Ensure all tests pass
+- [x] 4. Checkpoint — Ensure all tests pass
   - Run `npm test` and confirm all tests pass
   - Ensure all tests pass; ask the user if questions arise

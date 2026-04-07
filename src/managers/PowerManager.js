@@ -32,13 +32,16 @@ export class PowerManager {
   /**
    * Verifica si el puntaje actual desbloquea nuevos poderes.
    * @param {number} score - Puntaje actual del jugador.
+   * @param {SoundManager} [soundManager] - Manager de sonido para reproducir sfx_power_unlock.
    */
-  checkUnlocks(score) {
+  checkUnlocks(score, soundManager) {
     if (!this._powers.freeze.unlocked && score >= CONSTANTS.POWER_UNLOCK_FREEZE) {
       this._powers.freeze.unlocked = true;
+      if (soundManager) soundManager.play('sfx_power_unlock');
     }
     if (!this._powers.patch_bomb.unlocked && score >= CONSTANTS.POWER_UNLOCK_PATCH_BOMB) {
       this._powers.patch_bomb.unlocked = true;
+      if (soundManager) soundManager.play('sfx_power_unlock');
     }
   }
 

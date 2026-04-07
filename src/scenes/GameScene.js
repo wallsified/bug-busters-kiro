@@ -12,7 +12,7 @@ import { Wanderer } from '../entities/Wanderer.js';
 import { Seeker } from '../entities/Seeker.js';
 import { Replicator } from '../entities/Replicator.js';
 import { Module } from '../entities/Module.js';
-import { ProjectileGroup } from '../entities/ProjectileGroup.js';
+import { BombGroup } from '../entities/BombGroup.js';
 import { SoundManager } from '../managers/SoundManager.js';
 import { HUDManager } from '../managers/HUDManager.js';
 import { EffectsManager } from '../managers/EffectsManager.js';
@@ -39,13 +39,13 @@ export class GameScene extends Phaser.Scene {
     // Cargar tilemap del nivel actual
     this._loadTilemap(levelConfig);
 
-    // Instanciar managers
+    // Instanciar managers (PowerManager debe crearse antes que ScoreSystem)
     this._soundManager = new SoundManager(this);
     this._effectsManager = new EffectsManager(this);
-    this._scoreSystem = new ScoreSystem((score) => {
-      this._powerManager.checkUnlocks(score);
-    });
     this._powerManager = new PowerManager(this);
+    this._scoreSystem = new ScoreSystem((score) => {
+      this._powerManager.checkUnlocks(score, this._soundManager);
+    });
     this._hudManager = new HUDManager(this);
 
     // Crear Kiro
@@ -53,12 +53,17 @@ export class GameScene extends Phaser.Scene {
 
     // Spawnear enemigos y módulos
     this._bugs = [];
+
+    // Inicializar estado de seguimiento del umbral de spawn
+    this._spawnedPointTotal = 0;
+    this._spawnThresholdReached = false;
+
     this._spawnEnemies(levelConfig);
     this._modules = [];
     this._spawnModules(levelConfig);
 
-    // Crear grupo de proyectiles
-    this._projectiles = new ProjectileGroup(this);
+    // Crear grupo de bombas
+    this._bombs = new BombGroup(this);
 
     // Configurar controles
     this._cursors = this.input.keyboard.createCursorKeys();
@@ -69,10 +74,54 @@ export class GameScene extends Phaser.Scene {
       right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
     };
     this._spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.input.keyboard.addCapture([Phaser.Input.Keyboard.KeyCodes.SPACE]);
     this._qKey     = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
     this._eKey     = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
-    this.input.on('pointerdown', () => this._fireProjectile());
+    this._escKey   = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+    this._pKey     = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
     this._spaceWasDown = false;
+
+    // Inicializar estado de pausa
+    this._paused = false;
+
+    // Crear overlay de pausa (contenedor con profundidad máxima, fijo a la cámara)
+    this._pauseOverlay = this.add.container(0, 0);
+    this._pauseOverlay.setDepth(1000);
+    this._pauseOverlay.setScrollFactor(0);
+
+    // Fondo semitransparente negro
+    const { width, height } = this.scale;
+    const overlayBg = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.6);
+    this._pauseOverlay.add(overlayBg);
+
+    // Texto "PAUSED"
+    const pausedText = this.add.text(width / 2, height / 2 - 60, 'PAUSED', {
+      fontFamily: '"Press Start 2P"',
+      fontSize: '24px',
+      fill: '#ffffff'
+    }).setOrigin(0.5);
+    this._pauseOverlay.add(pausedText);
+
+    // Texto "RESUME" (interactivo)
+    const resumeText = this.add.text(width / 2, height / 2 + 20, 'RESUME', {
+      fontFamily: '"Press Start 2P"',
+      fontSize: '16px',
+      fill: '#ffffff'
+    }).setOrigin(0.5).setInteractive();
+    resumeText.on('pointerdown', () => this._togglePause());
+    this._pauseOverlay.add(resumeText);
+
+    // Texto "QUIT" (interactivo)
+    const quitText = this.add.text(width / 2, height / 2 + 60, 'QUIT', {
+      fontFamily: '"Press Start 2P"',
+      fontSize: '16px',
+      fill: '#ffffff'
+    }).setOrigin(0.5).setInteractive();
+    quitText.on('pointerdown', () => this.scene.start('MainMenuScene'));
+    this._pauseOverlay.add(quitText);
+
+    // Ocultar overlay inicialmente
+    this._pauseOverlay.setVisible(false);
 
     // Configurar colisiones
     this._setupCollisions();
@@ -88,6 +137,14 @@ export class GameScene extends Phaser.Scene {
 
   update() {
     if (this._transitioning) return;
+
+    // Verificar teclas de pausa (ESC o P)
+    if (Phaser.Input.Keyboard.JustDown(this._escKey) || Phaser.Input.Keyboard.JustDown(this._pKey)) {
+      this._togglePause();
+    }
+
+    // Si el juego está pausado, no procesar el resto del update
+    if (this._paused) return;
 
     // Actualizar Kiro
     this._kiro.update(this._cursors, this._wasd);
@@ -107,9 +164,9 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
-    // Disparo con spacebar (flanco de subida)
+    // Colocar bomba con spacebar (flanco de subida)
     const spaceDown = this._spaceKey.isDown;
-    if (spaceDown && !this._spaceWasDown) this._fireProjectile();
+    if (spaceDown && !this._spaceWasDown) this._placeBomb();
     this._spaceWasDown = spaceDown;
 
     // Activar poderes con Q (freeze) y E (patch_bomb)
@@ -138,6 +195,25 @@ export class GameScene extends Phaser.Scene {
     this._checkWinCondition();
   }
 
+  _togglePause() {
+    // Guardia: no pausar durante transiciones
+    if (this._transitioning) return;
+
+    this._paused = !this._paused;
+
+    if (this._paused) {
+      // Pausar el tiempo de la escena y la física
+      this.time.paused = true;
+      this.physics.pause();
+      this._pauseOverlay.setVisible(true);
+    } else {
+      // Reanudar el tiempo de la escena y la física
+      this.time.paused = false;
+      this.physics.resume();
+      this._pauseOverlay.setVisible(false);
+    }
+  }
+
   _loadTilemap(levelConfig) {
     try {
       const map = this.make.tilemap({ key: levelConfig.tilemapKey });
@@ -161,6 +237,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   _spawnEnemies(levelConfig) {
+    // Spawnear todos los enemigos definidos en la configuración del nivel
     for (const enemyDef of levelConfig.enemies) {
       let bug;
       if (enemyDef.type === 'Wanderer') {
@@ -169,13 +246,26 @@ export class GameScene extends Phaser.Scene {
         bug = new Seeker(this, enemyDef.x, enemyDef.y);
       } else if (enemyDef.type === 'Replicator') {
         bug = new Replicator(this, enemyDef.x, enemyDef.y, (spawnX, spawnY) => {
+          // Los Wanderers spawneados por Replicator se registran con sus colisiones
           const newWanderer = new Wanderer(this, spawnX, spawnY);
           this._bugs.push(newWanderer);
           this._setupBugCollisions(newWanderer);
         });
+      } else {
+        console.warn(`GameScene: tipo de enemigo desconocido "${enemyDef.type}"`);
       }
-      if (bug) this._bugs.push(bug);
+
+      if (bug) {
+        this._bugs.push(bug);
+        // Acumular puntos de los enemigos iniciales (excluye Replicators)
+        if (!(bug instanceof Replicator)) {
+          this._spawnedPointTotal += bug.pointValue;
+        }
+      }
     }
+
+    // El umbral de spawn se alcanza cuando los puntos acumulados superan el mínimo del nivel
+    this._spawnThresholdReached = this._spawnedPointTotal >= (levelConfig.spawnThreshold ?? 0);
   }
 
   _spawnModules(levelConfig) {
@@ -189,9 +279,13 @@ export class GameScene extends Phaser.Scene {
     for (const bug of this._bugs) this._setupBugCollisions(bug);
   }
 
+  _setupBombCollisions() {
+    // Reservado para colisiones globales de bombas si se necesitan en el futuro
+  }
+
   _setupBugCollisions(bug) {
-    this.physics.add.overlap(this._projectiles, bug, (projectile, hitBug) => {
-      this._onProjectileHitBug(projectile, hitBug);
+    this.physics.add.overlap(this._bombs, bug, (bomb, hitBug) => {
+      this._onBombHitBug(bomb, hitBug);
     });
     this.physics.add.overlap(bug, this._kiro, (hitBug) => {
       this._onBugHitKiro(hitBug);
@@ -203,13 +297,15 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  _onProjectileHitBug(projectile, bug) {
+  _onBombHitBug(bomb, bug) {
+    if (!bomb || bomb.active === false) return;
     if (!bug || bug.active === false) return;
-    if (!projectile || projectile.active === false) return;
-    projectile.setActive(false);
-    if (projectile.body) { projectile.body.velocity.x = 0; projectile.body.velocity.y = 0; }
-    this._effectsManager.shake(150, 0.008);
+    this._bombs.detonateBomb(bomb);
     this._eliminateBug(bug);
+  }
+
+  _placeBomb() {
+    this._bombs.placeBomb(this._kiro.x, this._kiro.y);
   }
 
   _eliminateBug(bug) {
@@ -219,6 +315,7 @@ export class GameScene extends Phaser.Scene {
     this._effectsManager.triggerHitStop();
     this._effectsManager.spawnScorePopup(bug.x, bug.y, bug.pointValue);
     bug.setActive(false);
+    bug.setVisible(false);
     if (bug.body) { bug.body.velocity.x = 0; bug.body.velocity.y = 0; }
     this._scoreSystem.addPoints(points);
     this._soundManager.play('sfx_eliminate');
@@ -241,13 +338,10 @@ export class GameScene extends Phaser.Scene {
     mod.hit();
   }
 
-  _fireProjectile() {
-    this._projectiles.fire(this._kiro.x, this._kiro.y, this._kiro.facing);
-    this._soundManager.play('sfx_fire');
-  }
-
   _checkWinCondition() {
     if (this._transitioning) return;
+    // Solo verificar victoria si se alcanzó el umbral de spawn
+    if (!this._spawnThresholdReached) return;
     if (this._bugs.filter(b => b && b.active !== false).length === 0) {
       this._levelComplete();
     }

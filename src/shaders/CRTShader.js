@@ -47,9 +47,9 @@ export class CRTShader extends BasePostFX {
       super({ game, name: 'CRTShader', fragShader: FRAG_SHADER });
     }
     // Intensidad de la viñeta radial (oscurecimiento hacia los bordes)
-    this.vignetteStrength = 0.4;
+    this.vignetteStrength = 0.25;
     // Opacidad de las líneas de escaneo en filas impares
-    this.scanlineAlpha = 0.15;
+    this.scanlineAlpha = 0.18;
   }
 
   /**

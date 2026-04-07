@@ -11,11 +11,11 @@ export const CONSTANTS = {
   // Duración del período de invencibilidad tras recibir daño (en milisegundos)
   INVINCIBILITY_DURATION: 3000,
 
-  // --- Proyectiles ---
-  // Número máximo de proyectiles activos simultáneamente
-  PROJECTILE_LIMIT: 3,
-  // Velocidad de los proyectiles en píxeles por segundo
-  PROJECTILE_SPEED: 400,
+  // --- Bombas ---
+  // Número máximo de bombas activas simultáneamente
+  BOMB_LIMIT: 3,
+  // Duración del fusible de la bomba en milisegundos
+  BOMB_FUSE_DURATION: 3000,
 
   // --- Poderes: umbrales de desbloqueo (puntos) ---
   POWER_UNLOCK_FREEZE: 150,

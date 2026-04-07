@@ -1,6 +1,6 @@
 {
-  "height": 18,
-  "width": 25,
+  "height": 32,
+  "width": 32,
   "tilewidth": 32,
   "tileheight": 32,
   "version": "1.6",
@@ -13,7 +13,7 @@
       "name": "ground",
       "type": "tilelayer",
       "width": 25,
-      "height": 18,
+      "height": 25,
       "x": 0,
       "y": 0,
       "visible": true,
@@ -50,7 +50,7 @@
       "columns": 2,
       "image": "../../assets/sprites/tileset.png",
       "imagewidth": 64,
-      "imageheight": 32,
+      "imageheight": 64,
       "tiles": [
         { "id": 1, "properties": [{ "name": "collides", "type": "bool", "value": true }] }
       ]

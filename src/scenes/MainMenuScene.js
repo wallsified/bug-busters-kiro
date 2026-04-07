@@ -74,8 +74,8 @@ export class MainMenuScene extends Phaser.Scene {
     // Panel de controles debajo del botón de inicio
     this.add.text(width / 2, 420, 'MOVE: ARROW KEYS / WASD\nFIRE: SPACE / CLICK\nFREEZE: Q\nPATCH BOMB: E', {
       fontFamily: '"Press Start 2P"',
-      fontSize: '8px',
-      fill: '#aaaaaa',
+      fontSize: '12px',
+      fill: '#ffffffff',
       align: 'center',
       lineSpacing: 8,
     }).setOrigin(0.5);
@@ -91,10 +91,10 @@ export class MainMenuScene extends Phaser.Scene {
 
   /**
    * Bucle de actualización: desplaza el fondo en diagonal a 20 px/s.
-   * @param {number} time - Tiempo total transcurrido en ms.
+   * @param {number} _time - Tiempo total transcurrido en ms (no utilizado).
    * @param {number} delta - Tiempo transcurrido desde el último frame en ms.
    */
-  update(time, delta) {
+  update(_time, delta) {
     // Desplazar el fondo en diagonal a 20 px/s
     this._bg.tilePositionX += delta * 0.02;
     this._bg.tilePositionY += delta * 0.02;
