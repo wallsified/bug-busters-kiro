@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Run & Log Tests After Task",
+  "description": "After each spec task is completed, runs the full Jest test suite. Results are printed to screen with clear pass/fail messages and saved to /logs/<datetime>.log.",
+  "version": "1",
+  "when": {
+    "type": "postTaskExecution"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "mkdir -p logs && LOG_FILE=\"logs/$(date '+%Y-%m-%d_%H-%M-%S').log\" && npx jest --verbose 2>&1 | tee \"$LOG_FILE\" && echo \"✅ All tests passed. Log saved to $LOG_FILE\" || echo \"❌ Some tests failed. See $LOG_FILE for details\"",
+    "timeout": 120
+  },
+  "workspaceFolderName": "bug-busters-kiro",
+  "shortName": "post-task-test-run"
+}

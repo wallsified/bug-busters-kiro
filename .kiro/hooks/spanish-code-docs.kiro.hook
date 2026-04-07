@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Spanish Code Documentation",
+  "description": "When a source file is edited, reviews the changes and ensures all code comments and inline documentation are written in Spanish, while keeping variable names, functions, and code identifiers in English.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "src/**/*.js"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A source file in this game project was just edited. Review the file and ensure all code comments and inline documentation are written in Spanish. This includes:\n- File-level and module-level comments describing purpose and behavior\n- Function and method JSDoc comments (descriptions, @param, @returns, etc.)\n- Inline comments explaining logic, algorithms, or non-obvious behavior\n- Any TODO or NOTE comments\n\nDo NOT change: variable names, function names, class names, string literals used in game logic, or any other code identifiers — keep those in English.\n\nIf the file already has complete and accurate Spanish documentation, no changes are needed. Otherwise, add or update the comments in Spanish to reflect the current state of the code."
+  },
+  "workspaceFolderName": "bug-busters-kiro",
+  "shortName": "spanish-code-docs"
+}

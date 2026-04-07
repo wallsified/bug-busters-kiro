@@ -1,4 +1,5 @@
 import { AssetLoader } from '../managers/AssetLoader.js';
+import { CRTShader } from '../shaders/CRTShader.js';
 
 /**
  * BootScene — Primera escena del juego. Se encarga de registrar todos los assets
@@ -20,8 +21,12 @@ export class BootScene extends Phaser.Scene {
 
   /**
    * Una vez registrados los assets, inicia la escena de carga con barra de progreso.
+   * Registra el pipeline CRTShader si el renderer es WebGL.
    */
   create() {
+    if (this.renderer && this.renderer.type === Phaser.WEBGL) {
+      this.renderer.pipelines.addPostPipeline('CRTShader', CRTShader);
+    }
     this.scene.start('LoadingScene');
   }
 }

@@ -23,9 +23,14 @@ export class HUDManager {
       this._livesText = scene.add.text(16, 40, 'LIVES: 3', textStyle).setScrollFactor(0);
       this._levelText = scene.add.text(16, 64, 'LEVEL: 1', textStyle).setScrollFactor(0);
 
-      // Textos de estado de poderes, posicionados en la parte superior derecha
+      // Textos de estado de poderes clásicos, posicionados en la parte superior derecha
       this._freezeText = scene.add.text(400, 16, '', textStyle).setScrollFactor(0);
       this._patchBombText = scene.add.text(400, 40, '', textStyle).setScrollFactor(0);
+
+      // Textos de umbrales de powerups automáticos, posicionados en la esquina inferior derecha
+      this._blastABugText = scene.add.text(400, 64, '', textStyle).setScrollFactor(0);
+      this._bugFreeZoneText = scene.add.text(400, 88, '', textStyle).setScrollFactor(0);
+      this._extraLifeText = scene.add.text(400, 112, '', textStyle).setScrollFactor(0);
     } else {
       // Entorno de pruebas sin Phaser: almacenar null para evitar errores
       this._scoreText = null;
@@ -33,6 +38,9 @@ export class HUDManager {
       this._levelText = null;
       this._freezeText = null;
       this._patchBombText = null;
+      this._blastABugText = null;
+      this._bugFreeZoneText = null;
+      this._extraLifeText = null;
     }
   }
 
@@ -41,7 +49,7 @@ export class HUDManager {
    * @param {number} score - Puntuación actual del jugador.
    * @param {number} lives - Vidas restantes del jugador.
    * @param {number} level - Nivel actual del juego.
-   * @param {Object} powerState - Estado de los poderes: { freeze: PowerState, patch_bomb: PowerState }
+   * @param {Object} powerState - Estado de los poderes: { freeze, patch_bomb, blastABug, nextBlastABug, nextBugFreeZone, nextExtraLife }
    */
   update(score, lives, level, powerState) {
     if (this._scoreText) this._scoreText.setText(`SCORE: ${score}`);
@@ -56,6 +64,26 @@ export class HUDManager {
       if (this._patchBombText) {
         this._patchBombText.setText(this._buildPowerText('PATCH_BOMB', powerState.patch_bomb));
         this._applyPowerColor(this._patchBombText, powerState.patch_bomb);
+      }
+
+      // Textos de powerups automáticos
+      if (this._blastABugText) {
+        const babState = powerState.blastABug;
+        if (babState && babState.active) {
+          const secs = Math.ceil(babState.remainingMs / 1000);
+          this._blastABugText.setText(`BAB: ${secs}s`);
+        } else {
+          const next = powerState.nextBlastABug;
+          this._blastABugText.setText(next !== undefined ? `BAB: ${next}pts` : '');
+        }
+      }
+      if (this._bugFreeZoneText) {
+        const next = powerState.nextBugFreeZone;
+        this._bugFreeZoneText.setText(next !== undefined ? `BFZ: ${next}pts` : '');
+      }
+      if (this._extraLifeText) {
+        const next = powerState.nextExtraLife;
+        this._extraLifeText.setText(next !== undefined ? `EL: ${next}pts` : '');
       }
     }
   }

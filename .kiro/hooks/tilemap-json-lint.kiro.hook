@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Tilemap JSON Lint",
+  "description": "When a tilemap JSON file is edited, validates it is well-formed and contains the required 'ground' layer and 'tileset' reference expected by GameScene.",
+  "version": "1.0.0",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["assets/tilemaps/*.json"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A tilemap JSON file in assets/tilemaps/ was just edited. Validate the following:\n1. The file is valid JSON (no syntax errors).\n2. It contains a layer named 'ground'.\n3. It references a tileset named 'tileset'.\n4. Tiles intended to block movement have the custom property 'collides: true'.\n\nIf any of these are missing or incorrect, report the specific issue and suggest the fix. Do not modify the file unless the user asks."
+  }
+}

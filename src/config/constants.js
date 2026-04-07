@@ -11,11 +11,11 @@ export const CONSTANTS = {
   // Duración del período de invencibilidad tras recibir daño (en milisegundos)
   INVINCIBILITY_DURATION: 3000,
 
-  // --- Proyectiles ---
-  // Número máximo de proyectiles activos simultáneamente
-  PROJECTILE_LIMIT: 3,
-  // Velocidad de los proyectiles en píxeles por segundo
-  PROJECTILE_SPEED: 400,
+  // --- Bombas ---
+  // Número máximo de bombas activas simultáneamente
+  BOMB_LIMIT: 3,
+  // Duración del fusible de la bomba en milisegundos
+  BOMB_FUSE_DURATION: 3000,
 
   // --- Poderes: umbrales de desbloqueo (puntos) ---
   POWER_UNLOCK_FREEZE: 150,
@@ -49,9 +49,29 @@ export const CONSTANTS = {
   // Número máximo de Wanderers que puede generar un Replicator
   REPLICATOR_MAX_SPAWNS: 3,
 
+  // --- Efectos visuales: duración del hit-stop (en milisegundos) ---
+  HIT_STOP_DURATION: 80,
+
   // --- Vidas iniciales del jugador ---
   PLAYER_INITIAL_LIVES: 3,
 
   // --- Clave de almacenamiento local ---
-  STORAGE_KEY: 'bugbusters_progress'
+  STORAGE_KEY: 'bugbusters_progress',
+
+  // --- Powerups automáticos: umbrales de score ---
+  POWERUP_BLAST_A_BUG_THRESHOLD: 20,
+  POWERUP_BUG_FREE_ZONE_THRESHOLD: 40,
+  POWERUP_EXTRA_LIFE_THRESHOLD: 100,
+
+  // --- Blast-a-Bug: parámetros ---
+  // Duración del efecto Blast-a-Bug en milisegundos
+  BLAST_A_BUG_DURATION: 5000,
+  // Escala del proyectil durante Blast-a-Bug
+  BLAST_A_BUG_SCALE: 2.5,
+
+  // --- Bug Free Zone: radio de efecto en píxeles ---
+  BUG_FREE_ZONE_RADIUS: 50,
+
+  // --- Banner de powerup: duración de visibilidad en milisegundos ---
+  POWERUP_BANNER_DURATION: 1500
 };

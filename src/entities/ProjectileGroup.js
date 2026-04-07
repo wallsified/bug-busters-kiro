@@ -1,12 +1,14 @@
 /**
+ * DEPRECATED — Este módulo fue reemplazado por BombGroup en el spec gameplay-overhaul (Tarea 3).
+ * Se mantiene como stub para compatibilidad con tests históricos (BugConditions, PreservationTests).
+ *
  * Grupo de proyectiles disparados por Kiro.
  * Extiende Phaser.Physics.Arcade.Group para gestionar el pool de proyectiles activos.
- *
- * Patrón de compatibilidad: si Phaser no está disponible (entorno Node/Jest),
- * se extiende una clase base mínima para permitir pruebas unitarias.
  */
 
-import { CONSTANTS } from '../config/constants.js';
+// Valores históricos (ya no están en CONSTANTS tras el gameplay-overhaul)
+const PROJECTILE_LIMIT = 3;
+const PROJECTILE_SPEED = 400;
 
 // Clase base mínima para entornos sin Phaser (tests con Jest)
 const BaseGroup = (typeof Phaser !== 'undefined')
@@ -27,8 +29,10 @@ const BaseGroup = (typeof Phaser !== 'undefined')
           x,
           y,
           active: true,
+          visible: false,
           body: { velocity: { x: 0, y: 0 } },
           setActive: function(v) { this.active = v; return this; },
+          setVisible: function(v) { this.visible = v; return this; },
           setPosition: function(px, py) { this.x = px; this.y = py; return this; }
         };
         this._children.push(obj);
@@ -42,9 +46,18 @@ export class ProjectileGroup extends BaseGroup {
    */
   constructor(scene) {
     super(scene);
-
     // Referencia a la escena para acceder al sistema de física y límites del mundo
     this.scene = scene;
+    // Escala activa para nuevos proyectiles (1 = normal, BLAST_A_BUG_SCALE cuando activo)
+    this._blastScale = 1;
+  }
+
+  /**
+   * Establece la escala de los proyectiles disparados mientras Blast-a-Bug está activo.
+   * @param {number} scale - Factor de escala (1 = normal, 2.5 = Blast-a-Bug)
+   */
+  setBlastScale(scale) {
+    this._blastScale = scale;
   }
 
   /**
@@ -60,7 +73,7 @@ export class ProjectileGroup extends BaseGroup {
     const activeCount = this.getChildren().filter(p => p.active).length;
 
     // Si se alcanzó el límite, no disparar
-    if (activeCount >= CONSTANTS.PROJECTILE_LIMIT) {
+    if (activeCount >= PROJECTILE_LIMIT) {
       return;
     }
 
@@ -73,24 +86,32 @@ export class ProjectileGroup extends BaseGroup {
       projectile = existing;
       projectile.setPosition(x, y);
       projectile.setActive(true);
+      projectile.setVisible(true);
     } else {
       // Crear un nuevo proyectil en el pool
       projectile = this.create(x, y, 'projectile');
+      projectile.setVisible(true);
     }
 
     // Calcular la velocidad según la dirección del disparo
-    const speed = CONSTANTS.PROJECTILE_SPEED;
     projectile.body.velocity.x = 0;
     projectile.body.velocity.y = 0;
 
+    // Aplicar escala de Blast-a-Bug si está activo
+    if (typeof projectile.setScale === 'function') {
+      projectile.setScale(this._blastScale);
+    } else if (projectile.scale !== undefined) {
+      projectile.scale = this._blastScale;
+    }
+
     if (direction === 'up') {
-      projectile.body.velocity.y = -speed;
+      projectile.body.velocity.y = -PROJECTILE_SPEED;
     } else if (direction === 'down') {
-      projectile.body.velocity.y = speed;
+      projectile.body.velocity.y = PROJECTILE_SPEED;
     } else if (direction === 'left') {
-      projectile.body.velocity.x = -speed;
+      projectile.body.velocity.x = -PROJECTILE_SPEED;
     } else if (direction === 'right') {
-      projectile.body.velocity.x = speed;
+      projectile.body.velocity.x = PROJECTILE_SPEED;
     }
 
     // Configurar desactivación automática al salir de los límites del mundo (solo en Phaser)

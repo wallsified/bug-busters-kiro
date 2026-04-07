@@ -1,4 +1,6 @@
-> "Who you gonna call? Bug Hunters!"
+# Bug Busters
+
+> _Who you gonna call? Bug Busters!_
 
 Juego arcade de navegador construido con **HTML5 + JavaScript** y el framework **Phaser 3**. Controlas a **Kiro**, un fantasma que recorre tableros de circuitos para eliminar bugs de software antes de que corrompan los módulos críticos del sistema.
 
@@ -6,21 +8,18 @@ Juego arcade de navegador construido con **HTML5 + JavaScript** y el framework *
 
 ## Descripción
 
-Bug Busters es un juego de acción en vista cenital donde el jugador debe eliminar tres tipos de enemigos (bugs) disparando proyectiles, proteger los módulos del circuito y avanzar a través de tres niveles de dificultad creciente. El juego guarda el progreso localmente en el navegador y desbloquea poderes especiales conforme aumenta la puntuación.
+Bug Busters es un juego de acción en vista cenital donde el jugador debe eliminar tres tipos de enemigos (bugs) disparando bombas, proteger los módulos del circuito y avanzar a través de tres niveles de dificultad creciente. El juego guarda el progreso localmente en el navegador y activa poderes especiales automáticamente conforme aumenta la puntuación.
 
----
 
 ## Controles
 
-| Acción | Teclado |
+| Acción | Teclado / Ratón |
 |---|---|
-| Mover arriba | `↑` o `W` |
-| Mover abajo | `↓` o `S` |
-| Mover izquierda | `←` o `A` |
-| Mover derecha | `→` o `D` |
-| Disparar | `Espacio` o clic del ratón |
+| Mover | `↑ ↓ ← →` o `W A S D` |
+| Colocar bomba | `Espacio` o clic del ratón |
 | Activar Freeze | `Q` |
 | Activar Patch Bomb | `E` |
+| Pausar | `P` o `ESC` |
 
 ---
 
@@ -34,26 +33,82 @@ Bug Busters es un juego de acción en vista cenital donde el jugador debe elimin
 | **Seeker** | Recalcula la ruta hacia Kiro cada 500 ms | 20 pts |
 | **Replicator** | Genera un nuevo Wanderer cada 8 segundos (máximo 3) | 30 pts |
 
-Cuando un bug colisiona con Kiro, se pierde una vida y se activa un período de invencibilidad de 3 segundos. Si un bug alcanza un módulo, reduce su integridad; si llega a cero, el nivel falla.
+Cuando un bug colisiona con Kiro se pierde una vida y se activa un período de invencibilidad de 3 segundos. Si un bug alcanza un módulo, reduce su integridad; si llega a cero, el nivel falla.
 
-### Poderes especiales
+### Powerups automáticos
 
-| Poder | Desbloqueo | Efecto | Cooldown |
-|---|---|---|---|
-| **Freeze** | 150 puntos | Inmoviliza todos los bugs durante 5 segundos | 15 s |
-| **Patch Bomb** | 300 puntos | Elimina todos los bugs en un radio de 250 px | 20 s |
+Se activan solos al cruzar umbrales de puntuación:
+
+| Powerup | Umbral | Efecto |
+|---|---|---|
+| **Blast-a-Bug** | Cada 20 pts | Proyectiles 2.5× más grandes durante 5 segundos |
+| **Bug Free Zone** | Cada 40 pts | Elimina todos los bugs a menos de 50 px de Kiro |
+| **Extra Life** | Cada 100 pts | +1 vida |
 
 ### Niveles
 
-El juego cuenta con **3 niveles** de dificultad creciente, cada uno con un diseño único de tablero de circuito:
+| Nivel | Descripción |
+|---|---|
+| 1 | Introducción — Wanderers y un Seeker |
+| 2 | Dificultad media — aparece el primer Replicator |
+| 3 | Dificultad alta — arena abierta con un Replicator y dos Seekers |
 
-| Nivel | Wanderers | Seekers | Replicators |
-|---|---|---|---|
-| 1 | 3 | 1 | 0 |
-| 2 | 3 | 2 | 1 |
-| 3 | 2 | 3 | 2 |
+Completar el nivel 3 muestra la pantalla de victoria con el mensaje *"I ain't afraid of no bugs"*.
 
-Completar el nivel 3 muestra la pantalla de victoria con el mensaje *"I ain't afraid a no bugs"*.
+---
+
+## Estructura del proyecto
+
+```
+bug-busters/
+├── index.html                  # Punto de entrada, config de Phaser y escenas
+├── favicon.ico
+├── assets/
+│   ├── audio/                  # Efectos de sonido y música (MP3)
+│   ├── sprites/                # Spritesheets y tilesets (PNG)
+│   └── tilemaps/               # Mapas de nivel en formato Tiled JSON
+├── src/
+│   ├── config/
+│   │   ├── constants.js        # Todos los valores numéricos del juego
+│   │   └── levels.js           # Configuración de enemigos y módulos por nivel
+│   ├── entities/
+│   │   ├── Bug.js              # Clase base de enemigos
+│   │   ├── Kiro.js             # Jugador principal
+│   │   ├── Wanderer.js         # Enemigo básico
+│   │   ├── Seeker.js           # Enemigo perseguidor
+│   │   ├── Replicator.js       # Enemigo generador
+│   │   ├── Module.js           # Módulo a proteger
+│   │   ├── BombGroup.js        # Pool de bombas del jugador
+│   │   └── ProjectileGroup.js  # Stub histórico (reemplazado por BombGroup)
+│   ├── managers/
+│   │   ├── AssetLoader.js      # Registro de todos los assets en Phaser
+│   │   ├── EffectsManager.js   # Partículas, shake, hit-stop, popups
+│   │   ├── HUDManager.js       # Puntuación, vidas, nivel y estado de poderes
+│   │   ├── PowerManager.js     # Lógica de poderes manuales y automáticos
+│   │   ├── PowerupBanner.js    # Banner de texto al activar un powerup
+│   │   ├── ProgressManager.js  # Guardado y carga de progreso en localStorage
+│   │   ├── ScoreSystem.js      # Puntuación y callback de cambio
+│   │   └── SoundManager.js     # Reproducción de audio con manejo de errores
+│   ├── scenes/
+│   │   ├── BootScene.js        # Carga de assets y registro del shader CRT
+│   │   ├── LoadingScene.js     # Barra de progreso de carga
+│   │   ├── MainMenuScene.js    # Menú principal con high score
+│   │   ├── TutorialScene.js    # Explicación de powerups (antes del nivel 1)
+│   │   ├── GameScene.js        # Loop principal del juego
+│   │   ├── LevelCompleteScene.js
+│   │   ├── GameOverScene.js
+│   │   └── VictoryScene.js
+│   └── shaders/
+│       └── CRTShader.js        # Post-processing pipeline efecto CRT
+├── tests/
+│   └── unit/                   # Un archivo .test.js por módulo
+├── logs/                       # Logs de ejecución de tests (auto-generados)
+└── .kiro/                      # Configuración de Kiro IDE
+    ├── specs/                  # Especificaciones de features
+    ├── steering/               # Reglas de contexto para el agente
+    ├── hooks/                  # Automatizaciones del agente
+    └── skills/                 # Snippets de referencia manuales
+```
 
 ---
 
@@ -61,94 +116,149 @@ Completar el nivel 3 muestra la pantalla de victoria con el mensaje *"I ain't af
 
 ### Requisitos
 
-- Navegador moderno con soporte para ES6 (Chrome, Firefox, Edge, Safari)
-- Conexión a internet (para cargar Phaser 3 y la fuente desde CDN)
+- Navegador moderno con soporte ES6 (Chrome, Firefox, Edge, Safari)
+- Conexión a internet (Phaser 3 y la fuente se cargan desde CDN)
 
 ### Pasos
 
-1. Clona o descarga el repositorio:
-   ```bash
-   git clone <url-del-repositorio>
-   cd bug-busters
-   ```
+```bash
+git clone <url-del-repositorio>
+cd bug-busters
+```
 
-2. Abre `index.html` directamente en el navegador, o sirve el directorio con cualquier servidor HTTP estático:
-   ```bash
-   # Con Python
-   python3 -m http.server 8080
+Abre `index.html` con un servidor estático:
 
-   # Con Node.js (npx)
-   npx serve .
-   ```
+```bash
+# Python
+python3 -m http.server 8080
 
-3. Navega a `http://localhost:8080` en tu navegador.
+# Node.js
+npx serve .
+```
 
-> No se requiere proceso de compilación. El juego corre directamente en el navegador.
+Navega a `http://localhost:8080`. No se requiere compilación.
 
----
-### Requisitos previos
+### Tests
 
 ```bash
 npm install
-```
-
-### Ejecutar todas las pruebas
-
-```bash
 npm test
 ```
 
-Las pruebas se encuentran en `tests/unit/` y cubren todos los sistemas principales del juego usando **Jest** + **fast-check** (mínimo 100 iteraciones por propiedad).
+Las pruebas están en `tests/unit/` y usan **Jest** + **fast-check** (mínimo 100 iteraciones por propiedad).
 
 ---
 
-## Uso de las características de Kiro IDE
+## Desarrollo con Kiro IDE
 
-Este juego fue desarrollado íntegramente con **Kiro IDE**, aprovechando sus funcionalidades nativas.
+Este proyecto fue construido íntegramente con **Kiro IDE** usando spec-driven development. A continuación se documenta toda la configuración del agente.
+
+---
 
 ### Specs
 
-Las **specs** se usaron para definir formalmente los tres pilares del proyecto antes de escribir código:
+Cada spec vive en `.kiro/specs/<nombre>/` y contiene `requirements.md`, `design.md` y `tasks.md`.
 
-- **`requirements.md`**: 11 requisitos en formato de historias de usuario con criterios de aceptación verificables.
-- **`design.md`**: Arquitectura de escenas, interfaces de clases, modelos de datos y 14 propiedades de corrección que guían los tests basados en propiedades.
-- **`tasks.md`**: 16 tareas ordenadas e incrementales, cada una vinculada a requisitos específicos para trazabilidad completa.
-
-### Steering Rules
-
-Las **steering rules** establecieron estándares de codificación aplicados consistentemente:
-
-- Nombres de variables, funciones y clases en **inglés**.
-- Comentarios explicativos en **español**.
-- Tests de propiedades con fast-check con mínimo 100 iteraciones, referenciando la propiedad del diseño que validan.
-
-### Hooks
-
-Los **hooks** automatizaron la ejecución de pruebas:
-
-- Un hook `fileEdited` sobre `src/**/*.js` y `tests/**/*.js` disparaba `npm test` automáticamente al guardar cualquier archivo, garantizando retroalimentación inmediata ante regresiones.
-
-### MCP
-
-El protocolo **MCP** se utilizó para acceder a herramientas externas:
-
-- Consultas sobre la API de Phaser 3 (física arcade, grupos de sprites, sistema de escenas).
-- Verificación de la sintaxis de fast-check y configuración de Jest con Babel para módulos ES6.
-- Búsqueda de licencias de assets de audio en freesound.org.
-
-### Powers
-
-Los **powers** de Kiro ampliaron las capacidades del agente:
-
-- Acceso a documentación especializada de Phaser 3 y fast-check directamente desde el IDE.
-- Consultas sobre mejores prácticas de arquitectura para juegos basados en escenas.
-- Verificación de licencias de assets open-source (CC0).
+| Spec | Descripción |
+|---|---|
+| **bug-busters** | Feature inicial — mecánicas base: movimiento, enemigos, colisiones, HUD, progreso |
+| **bug-busters-fixes** | Bugfix spec — correcciones de bugs detectados en la versión inicial |
+| **gameplay-overhaul** | Feature — reemplaza proyectiles por bombas, añade pausa, mejora el sistema de niveles |
+| **multi-bug-fixes** | Bugfix spec — correcciones múltiples post-overhaul |
+| **retro-visual-effects** | Feature — shader CRT, partículas, hit-stop, score popups, scanlines |
+| **powerup-system** | Feature — tres powerups automáticos por score, tutorial, banner y HUD extendido |
 
 ---
 
-## Créditos de assets
+### Agent Hooks
 
-Todos los assets son de licencia abierta (CC0) o generados proceduralmente. Consulta [`assets/CREDITS.txt`](assets/CREDITS.txt) para ver las fuentes completas.
+Los hooks viven en `.kiro/hooks/` y se ejecutan automáticamente ante eventos del IDE.
+
+#### `post-task-test-run`
+- **Evento:** `postTaskExecution` — se dispara al completar cada tarea de un spec
+- **Acción:** Ejecuta `npm test` y guarda el resultado en `logs/<datetime>.log`
+- **Propósito:** Garantiza que ninguna tarea rompa los tests existentes
+
+#### `spanish-code-docs`
+- **Evento:** `fileEdited` — cualquier archivo en `src/**/*.js`
+- **Acción:** Revisa que todos los comentarios e inline docs estén en español, sin tocar los identificadores en inglés
+- **Propósito:** Mantener la convención de idioma del proyecto de forma automática
+
+#### `asset-loader-sync`
+- **Evento:** `fileEdited` — `src/managers/AssetLoader.js`
+- **Acción:** Verifica si se añadieron o eliminaron assets y actualiza `.kiro/steering/asset-manisfest.md`
+- **Propósito:** Mantener el manifiesto de assets sincronizado con el código real
+
+#### `tilemap-json-lint`
+- **Evento:** `fileEdited` — `assets/tilemaps/*.json`
+- **Acción:** Valida que el JSON sea correcto, tenga la capa `ground`, referencie el tileset `tileset` y que los tiles de colisión tengan `collides: true`
+- **Propósito:** Prevenir errores de configuración en los tilemaps antes de que lleguen al juego
+
+---
+
+### Steering Rules
+
+Las steering rules viven en `.kiro/steering/` y se incluyen automáticamente en cada interacción con el agente.
+
+#### `game-conventions.md`
+Define las convenciones generales del proyecto:
+- **Idioma del código:** comentarios en español, identificadores en inglés
+- **Constantes:** nunca usar magic numbers — siempre referenciar `CONSTANTS`
+- **Estructura de archivos:** dónde vive cada tipo de módulo
+- **Compatibilidad Jest:** patrón de clase base condicional para entidades que extienden Phaser
+- **Tests:** fast-check con `{ numRuns: 100 }`, un archivo por módulo
+
+#### `phaser-patterns.md`
+Patrones establecidos de Phaser 3 que el agente debe seguir:
+- Orden de métodos en escenas: `constructor → init → preload → create → update`
+- Guard `_transitioning` para evitar transiciones dobles
+- Creación y eliminación de entidades físicas (`setActive(false)` en lugar de `destroy()`)
+- Verificación de `active` antes de procesar colisiones
+- Anclar HUD con `setScrollFactor(0)`
+- Uso de `delayedCall` y `addEvent` para timers
+- Partículas con Phaser 3.60+
+- Detección de teclas con flanco de subida
+
+#### `asset-manisfest.md`
+Manifiesto completo de todos los assets del juego:
+- Spritesheets con sus claves exactas (`kiro`, `wanderer`, `seeker`, `replicator`)
+- Imágenes estáticas (`bomb`, `tileset`)
+- Tilemaps JSON (`circuit_1`, `circuit_2`, `circuit_3`)
+- Audio (`sfx_fire`, `sfx_eliminate`, `sfx_power_unlock`, `sfx_power_activate`, `sfx_life_lost`, `music_game`)
+- Animaciones definidas en código y sus frames
+
+---
+
+### Skills
+
+Los skills viven en `.kiro/skills/` y se activan manualmente con `#` en el chat.
+
+#### `phaser-arcade-patterns`
+- **Activación:** manual (`inclusion: manual`)
+- **Contenido:** snippets de referencia para efectos arcade en Phaser 3:
+  - Screen shake (suave y fuerte)
+  - Flash de pantalla (blanco y rojo)
+  - Hit-stop (freeze frame)
+  - Partículas de explosión al eliminar enemigos
+  - Score pop-up flotante
+  - Blink de invencibilidad de Kiro
+  - Pantalla de carga con scanlines
+  - Fade entre escenas
+  - Efecto CRT con viñeta
+  - Animación de título con bounce
+
+---
+
+### MCP Servers
+
+Configurados en `~/.kiro/settings/mcp.json`.
+
+| Servidor | Comando | Estado | Descripción |
+|---|---|---|---|
+| **fetch** | `uvx mcp-server-fetch` | Deshabilitado | Permite al agente hacer fetch de URLs externas |
+| **aws-api** (via ECS Express Power) | `uvx awslabs.aws-api-mcp-server@latest` | Activo (via Power) | Acceso a la API de AWS para despliegue con ECS Express Mode |
+
+El servidor `aws-api` forma parte del **ECS Express Power** instalado en Kiro, que permite desplegar la aplicación como contenedor en AWS ECS con HTTPS en pocos pasos.
 
 ---
 
@@ -156,8 +266,9 @@ Todos los assets son de licencia abierta (CC0) o generados proceduralmente. Cons
 
 | Componente | Tecnología |
 |---|---|
-| Motor de juego | Phaser 3 (CDN) |
-| Lenguaje | JavaScript ES6+ |
-| Fuente | Press Start 2P (Google Fonts) |
+| Motor de juego | Phaser 3.60 (CDN) |
+| Lenguaje | JavaScript ES6+ (módulos nativos) |
+| Fuente | Press Start 2P (Google Fonts CDN) |
 | Persistencia | `localStorage` |
-| Pruebas | Jest + fast-check |
+| Tests | Jest 29 + fast-check 3 |
+| IDE | Kiro |

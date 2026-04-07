@@ -20,7 +20,7 @@ export class AssetLoader {
     scene.load.spritesheet('replicator', 'assets/sprites/replicator.png', frameConfig);
 
     // --- Imágenes estáticas ---
-    scene.load.image('projectile', 'assets/sprites/projectile.png');
+    scene.load.image('bomb', 'assets/sprites/bomb.png');
     scene.load.image('tileset', 'assets/sprites/tileset.png');
 
     // --- Tilemaps JSON de los niveles ---
@@ -34,7 +34,9 @@ export class AssetLoader {
     scene.load.audio('sfx_power_unlock', 'assets/audio/sfx_power_unlock.mp3');
     scene.load.audio('sfx_power_activate', 'assets/audio/sfx_power_activate.mp3');
     scene.load.audio('sfx_life_lost', 'assets/audio/sfx_life_lost.mp3');
+    scene.load.audio('game_over', 'assets/audio/game_over.mp3');
     scene.load.audio('music_game', 'assets/audio/music_game.mp3');
+    scene.load.audio('loop', 'assets/audio/loop.mp3');
 
     // Listener de errores: loguea el fallo y obtiene el asset de respaldo
     scene.load.on('loaderror', (file) => {
