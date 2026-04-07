@@ -16,6 +16,16 @@ export class Replicator extends Bug {
    */
   constructor(scene, x, y, onSpawn = null) {
     super(scene, x, y, 'replicator');
+
+    // Ajustar el tamaño de visualización del sprite a 48×48 píxeles
+    if (typeof this.setDisplaySize === 'function') {
+      this.setDisplaySize(48, 48);
+    } else {
+      // Entorno sin Phaser (Jest): simular el efecto de setDisplaySize
+      this.displayWidth = 48;
+      this.displayHeight = 48;
+    }
+
     this.x = x;
     this.y = y;
 

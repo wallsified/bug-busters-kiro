@@ -49,6 +49,9 @@ export const CONSTANTS = {
   // Número máximo de Wanderers que puede generar un Replicator
   REPLICATOR_MAX_SPAWNS: 3,
 
+  // --- Efectos visuales: duración del hit-stop (en milisegundos) ---
+  HIT_STOP_DURATION: 80,
+
   // --- Vidas iniciales del jugador ---
   PLAYER_INITIAL_LIVES: 3,
 

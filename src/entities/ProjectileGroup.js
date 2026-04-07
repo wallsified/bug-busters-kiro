@@ -29,6 +29,7 @@ const BaseGroup = (typeof Phaser !== 'undefined')
           active: true,
           body: { velocity: { x: 0, y: 0 } },
           setActive: function(v) { this.active = v; return this; },
+          setVisible: function(v) { this.visible = v; return this; },
           setPosition: function(px, py) { this.x = px; this.y = py; return this; }
         };
         this._children.push(obj);
@@ -73,9 +74,11 @@ export class ProjectileGroup extends BaseGroup {
       projectile = existing;
       projectile.setPosition(x, y);
       projectile.setActive(true);
+      projectile.setVisible(true);
     } else {
       // Crear un nuevo proyectil en el pool
       projectile = this.create(x, y, 'projectile');
+      projectile.setVisible(true);
     }
 
     // Calcular la velocidad según la dirección del disparo

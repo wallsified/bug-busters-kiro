@@ -40,10 +40,19 @@ export class Kiro extends BaseSprite {
     // Marca de tiempo hasta la cual Kiro es invencible (0 = no invencible)
     this._invincibleUntil = 0;
 
-    // Registrar el sprite en la escena y habilitar la física si Phaser está disponible
-    if (typeof Phaser !== 'undefined' && scene && scene.add) {
-      scene.add.existing(this);
-      scene.physics.add.existing(this);
+    // Registrar el sprite en la escena y habilitar la física
+    if (scene && scene.add) {
+      if (typeof Phaser !== 'undefined') {
+        scene.add.existing(this);
+      }
+      if (scene.physics && scene.physics.add) {
+        scene.physics.add.existing(this);
+      }
+    }
+
+    // Evitar que Kiro salga de los límites del mundo
+    if (this.body && typeof this.body.setCollideWorldBounds === 'function') {
+      this.body.setCollideWorldBounds(true);
     }
   }
 

@@ -4,6 +4,7 @@
  * condiciones de victoria/derrota, poderes y HUD.
  */
 
+import { CRTShader } from '../shaders/CRTShader.js';
 import { CONSTANTS } from '../config/constants.js';
 import { LEVELS } from '../config/levels.js';
 import { Kiro } from '../entities/Kiro.js';
@@ -14,6 +15,7 @@ import { Module } from '../entities/Module.js';
 import { ProjectileGroup } from '../entities/ProjectileGroup.js';
 import { SoundManager } from '../managers/SoundManager.js';
 import { HUDManager } from '../managers/HUDManager.js';
+import { EffectsManager } from '../managers/EffectsManager.js';
 import { PowerManager } from '../managers/PowerManager.js';
 import { ScoreSystem } from '../managers/ScoreSystem.js';
 
@@ -39,6 +41,7 @@ export class GameScene extends Phaser.Scene {
 
     // Instanciar managers
     this._soundManager = new SoundManager(this);
+    this._effectsManager = new EffectsManager(this);
     this._scoreSystem = new ScoreSystem((score) => {
       this._powerManager.checkUnlocks(score);
     });
@@ -46,7 +49,7 @@ export class GameScene extends Phaser.Scene {
     this._hudManager = new HUDManager(this);
 
     // Crear Kiro
-    this._kiro = new Kiro(this, 80, 80);
+    this._kiro = new Kiro(this, 80, 300);
 
     // Spawnear enemigos y módulos
     this._bugs = [];
@@ -76,6 +79,11 @@ export class GameScene extends Phaser.Scene {
 
     // Iniciar música de fondo
     this._soundManager.startMusic();
+
+    // Aplicar pipeline CRTShader a la cámara principal si el renderer es WebGL
+    if (this.renderer && this.renderer.type === Phaser.WEBGL) {
+      this.cameras.main.setPostPipeline(CRTShader);
+    }
   }
 
   update() {
@@ -108,11 +116,13 @@ export class GameScene extends Phaser.Scene {
     if (Phaser.Input.Keyboard.JustDown(this._qKey)) {
       if (this._powerManager.activate('freeze', this._kiro, this._bugs)) {
         this._soundManager.play('sfx_power_activate');
+        this._effectsManager.shake(200, 0.010);
       }
     }
     if (Phaser.Input.Keyboard.JustDown(this._eKey)) {
       if (this._powerManager.activate('patch_bomb', this._kiro, this._bugs, (bug) => this._eliminateBug(bug))) {
         this._soundManager.play('sfx_power_activate');
+        this._effectsManager.shake(200, 0.010);
       }
     }
 
@@ -198,12 +208,16 @@ export class GameScene extends Phaser.Scene {
     if (!projectile || projectile.active === false) return;
     projectile.setActive(false);
     if (projectile.body) { projectile.body.velocity.x = 0; projectile.body.velocity.y = 0; }
+    this._effectsManager.shake(150, 0.008);
     this._eliminateBug(bug);
   }
 
   _eliminateBug(bug) {
     if (!bug || bug.active === false) return;
     const points = bug.pointValue;
+    this._effectsManager.spawnParticleBurst(bug.x, bug.y);
+    this._effectsManager.triggerHitStop();
+    this._effectsManager.spawnScorePopup(bug.x, bug.y, bug.pointValue);
     bug.setActive(false);
     if (bug.body) { bug.body.velocity.x = 0; bug.body.velocity.y = 0; }
     this._scoreSystem.addPoints(points);
@@ -214,6 +228,8 @@ export class GameScene extends Phaser.Scene {
     if (!bug || bug.active === false) return;
     if (this._kiro.isInvincible) return;
     this._lives -= 1;
+    this._effectsManager.shake(300, 0.015);
+    this._effectsManager.startDamageBlink(this._kiro);
     this._kiro.triggerInvincibility();
     this._soundManager.play('sfx_life_lost');
     if (this._lives <= 0) this._gameOver();
@@ -250,6 +266,7 @@ export class GameScene extends Phaser.Scene {
   _gameOver() {
     if (this._transitioning) return;
     this._transitioning = true;
+    this._soundManager.play('game_over');
     this.scene.start('GameOverScene', {
       score: this._scoreSystem.getScore(),
       level: this._currentLevel
