@@ -130,8 +130,15 @@ nginx -t
 log "Habilitando nginx para arranque automático al reiniciar..."
 systemctl enable nginx
 
-log "Reiniciando nginx..."
-systemctl restart nginx
+# Usar start en primera ejecución, reload si ya está corriendo — evita el cuelgue de restart
+if systemctl is-active --quiet nginx; then
+    log "nginx ya está activo. Recargando configuración..."
+    systemctl reload nginx
+else
+    log "Iniciando nginx..."
+    systemctl start nginx
+fi
 
 # Obtener la IP pública de la instancia desde el servicio de metadatos de EC2
-log "Despliegue completado. El juego está disponible en http://$(curl -s http://78.12.7.94/latest/meta-data/public-ipv4)/"
+PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+log "Despliegue completado. El juego está disponible en http://${PUBLIC_IP}/"
