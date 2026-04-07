@@ -10,6 +10,7 @@ const BaseSprite = (typeof Phaser !== 'undefined')
   : class {
       constructor() {
         this.body = { velocity: { x: 0, y: 0 } };
+        this.active = true;
       }
     };
 
@@ -22,7 +23,11 @@ export class Module extends BaseSprite {
    * @param {Function|null} onDestroyed - Callback invocado cuando la integridad llega a cero
    */
   constructor(scene, x, y, integrity = 3, onDestroyed = null) {
-    super(scene, x, y, 'module');
+    // Usar 'kiro' como textura de respaldo si 'module' no existe
+    const textureKey = (typeof Phaser !== 'undefined' && scene && scene.textures && scene.textures.exists('module'))
+      ? 'module'
+      : 'kiro';
+    super(scene, x, y, textureKey);
     this.x = x;
     this.y = y;
 
@@ -35,7 +40,10 @@ export class Module extends BaseSprite {
     // Registrar el sprite en la escena y habilitar la física si Phaser está disponible
     if (typeof Phaser !== 'undefined' && scene && scene.add) {
       scene.add.existing(this);
-      scene.physics.add.existing(this);
+      scene.physics.add.existing(this, true); // true = cuerpo estático
+      // Ocultar el sprite base y dibujar un rectángulo verde para identificar el módulo
+      this.setVisible(false);
+      this._visual = scene.add.rectangle(x, y, 28, 28, 0x00ff88).setDepth(1);
     }
   }
 

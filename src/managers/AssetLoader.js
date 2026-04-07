@@ -20,7 +20,7 @@ export class AssetLoader {
     scene.load.spritesheet('replicator', 'assets/sprites/replicator.png', frameConfig);
 
     // --- Imágenes estáticas ---
-    scene.load.image('projectile', 'assets/sprites/projectile.png');
+    scene.load.image('bomb', 'assets/sprites/bomb.png');
     scene.load.image('tileset', 'assets/sprites/tileset.png');
 
     // --- Tilemaps JSON de los niveles ---

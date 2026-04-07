@@ -3,7 +3,7 @@
  * Gestiona el pool de bombas activas con lógica de fusible y detonación.
  *
  * Patrón de compatibilidad: si Phaser no está disponible (entorno Node/Jest),
- * se extiende una clase base mínima para permitir pruebas unitarias.
+ * se usa una implementación mock mínima.
  */
 
 import { CONSTANTS } from '../config/constants.js';
@@ -16,23 +16,15 @@ const BaseGroup = (typeof Phaser !== 'undefined')
   ? Phaser.Physics.Arcade.Group
   : class {
       constructor() {
-        // Lista interna de bombas del pool
         this._children = [];
       }
-
-      getChildren() {
-        return this._children;
-      }
-
+      getChildren() { return this._children; }
       create(x, y, key) {
-        // Crea un objeto bomba simulado con la interfaz mínima necesaria
         const obj = {
-          x,
-          y,
-          active: true,
+          x, y, active: true, visible: true,
           body: {
             velocity: { x: 0, y: 0 },
-            reset: function(px, py) { /* no-op en entorno mock */ }
+            reset: function(px, py) { this.x = px; this.y = py; }
           },
           fuseTimer: null,
           setActive: function(v) { this.active = v; return this; },
@@ -49,49 +41,53 @@ export class BombGroup extends BaseGroup {
    * @param {Phaser.Scene} scene - La escena de Phaser que contiene el grupo
    */
   constructor(scene) {
-    super(scene);
-
-    // Referencia a la escena para acceder al sistema de tiempo
+    super(scene, [], { runChildUpdate: false });
     this.scene = scene;
+    // Pool de sprites de bomba creados manualmente
+    this._pool = [];
   }
 
   /**
    * Coloca una bomba en la posición de tile más cercana al punto dado.
-   * Si ya se alcanzó el límite de bombas activas, la operación es un no-op.
-   *
-   * @param {number} x - Posición X de origen (posición de Kiro)
-   * @param {number} y - Posición Y de origen (posición de Kiro)
    */
   placeBomb(x, y) {
-    // Verificar si se alcanzó el límite de bombas activas
-    if (this.getActiveCount() >= CONSTANTS.BOMB_LIMIT) {
-      return;
-    }
+    if (this.getActiveCount() >= CONSTANTS.BOMB_LIMIT) return;
 
-    // Calcular la posición snapeada al centro del tile más cercano
     const snappedX = Math.round(x / TILE_SIZE) * TILE_SIZE + TILE_SIZE / 2;
     const snappedY = Math.round(y / TILE_SIZE) * TILE_SIZE + TILE_SIZE / 2;
 
-    // Buscar una bomba inactiva en el pool para reutilizarla
-    const existing = this.getChildren().find(b => !b.active);
-    let bomb;
+    // Debug: registrar posición de colocación y tamaño actual del pool
+    console.log('[BombGroup] placeBomb called at', snappedX, snappedY, 'pool size:', this._pool.length);
 
-    if (existing) {
-      // Reutilizar bomba inactiva del pool
-      bomb = existing;
-      bomb.setActive(true);
-      bomb.setVisible(true);
-    } else {
-      // Crear una nueva bomba en el pool (usa la imagen estática 'projectile')
-      bomb = this.create(snappedX, snappedY, 'projectile');
-      if (!bomb) return; // guardia: fallo de creación
+    let bomb = this._pool.find(b => !b.active);
+
+    if (!bomb) {
+      if (typeof Phaser !== 'undefined') {
+        // Crear sprite de física directamente en la escena
+        bomb = this.scene.physics.add.sprite(snappedX, snappedY, 'bomb');
+        bomb.fuseTimer = null;
+        this._pool.push(bomb);
+        // Agregar al grupo para que los overlaps funcionen
+        this.add(bomb);
+      } else {
+        // Entorno mock (Jest)
+        bomb = this.create(snappedX, snappedY, 'bomb');
+        bomb.fuseTimer = null;
+        this._pool.push(bomb);
+      }
     }
 
-    // Sincronizar posición del sprite y del cuerpo físico
+    bomb.setActive(true);
+    bomb.setVisible(true);
     bomb.setPosition(snappedX, snappedY);
     if (bomb.body) bomb.body.reset(snappedX, snappedY);
 
-    // Iniciar el temporizador del fusible
+    // Cancelar fusible anterior si existe
+    if (bomb.fuseTimer) {
+      if (typeof bomb.fuseTimer.remove === 'function') bomb.fuseTimer.remove(false);
+      bomb.fuseTimer = null;
+    }
+
     bomb.fuseTimer = this.scene.time.delayedCall(
       CONSTANTS.BOMB_FUSE_DURATION,
       () => this.detonateBomb(bomb)
@@ -99,40 +95,36 @@ export class BombGroup extends BaseGroup {
   }
 
   /**
-   * Detona una bomba específica, cancelando su fusible y desactivándola.
-   * Puede ser llamado por contacto con un Bug o por expiración del fusible.
-   *
-   * @param {object} bomb - La bomba a detonar
+   * Detona una bomba específica.
    */
   detonateBomb(bomb) {
-    // Guardia: ignorar si la bomba ya fue detonada o no existe
-    if (!bomb || bomb.active === false) {
-      return;
-    }
+    if (!bomb || bomb.active === false) return;
 
-    // Cancelar el temporizador del fusible si aún está activo
     if (bomb.fuseTimer) {
-      if (typeof bomb.fuseTimer.remove === 'function') {
-        bomb.fuseTimer.remove(false);
-      }
+      if (typeof bomb.fuseTimer.remove === 'function') bomb.fuseTimer.remove(false);
       bomb.fuseTimer = null;
     }
 
-    // Desactivar y ocultar la bomba
     bomb.setActive(false);
     bomb.setVisible(false);
-
-    // Detener cualquier movimiento residual
-    bomb.body.velocity.x = 0;
-    bomb.body.velocity.y = 0;
+    if (bomb.body) {
+      bomb.body.velocity.x = 0;
+      bomb.body.velocity.y = 0;
+    }
   }
 
   /**
-   * Retorna el número de bombas actualmente activas en el pool.
-   *
-   * @returns {number} Cantidad de bombas activas
+   * Retorna el número de bombas actualmente activas.
    */
   getActiveCount() {
-    return this.getChildren().filter(b => b.active === true).length;
+    return this._pool.filter(b => b.active === true).length;
+  }
+
+  /**
+   * Retorna todos los sprites del pool (para overlaps).
+   */
+  getChildren() {
+    if (typeof Phaser !== 'undefined') return this._pool;
+    return super.getChildren ? super.getChildren() : this._pool;
   }
 }

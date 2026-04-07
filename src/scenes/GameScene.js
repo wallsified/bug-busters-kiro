@@ -81,6 +81,11 @@ export class GameScene extends Phaser.Scene {
     this._pKey     = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
     this._spaceWasDown = false;
 
+    // Colocar bomba también con clic del ratón
+    this.input.on('pointerdown', () => {
+      if (!this._paused && !this._transitioning) this._placeBomb();
+    });
+
     // Inicializar estado de pausa
     this._paused = false;
 
@@ -174,7 +179,10 @@ export class GameScene extends Phaser.Scene {
 
     // Colocar bomba con spacebar (flanco de subida)
     const spaceDown = this._spaceKey.isDown;
-    if (spaceDown && !this._spaceWasDown) this._placeBomb();
+    if (spaceDown && !this._spaceWasDown) {
+      console.log('[GameScene] SPACE pressed, placing bomb at', this._kiro.x, this._kiro.y);
+      this._placeBomb();
+    }
     this._spaceWasDown = spaceDown;
 
     // Activar poderes con Q (freeze) y E (patch_bomb)
@@ -316,6 +324,7 @@ export class GameScene extends Phaser.Scene {
   _onBombHitBug(bomb, bug) {
     if (!bomb || bomb.active === false) return;
     if (!bug || bug.active === false) return;
+    console.log('[GameScene] bomb hit bug, bug.pointValue=', bug.pointValue, 'bug constructor=', bug.constructor?.name);
     this._bombs.detonateBomb(bomb);
     this._eliminateBug(bug);
   }
@@ -326,10 +335,11 @@ export class GameScene extends Phaser.Scene {
 
   _eliminateBug(bug) {
     if (!bug || bug.active === false) return;
-    const points = bug.pointValue;
+    // Guardia: verificar que es un Bug válido con pointValue
+    const points = (typeof bug.pointValue === 'number') ? bug.pointValue : 0;
     this._effectsManager.spawnParticleBurst(bug.x, bug.y);
     this._effectsManager.triggerHitStop();
-    this._effectsManager.spawnScorePopup(bug.x, bug.y, bug.pointValue);
+    this._effectsManager.spawnScorePopup(bug.x, bug.y, points);
     bug.setActive(false);
     bug.setVisible(false);
     if (bug.body) { bug.body.velocity.x = 0; bug.body.velocity.y = 0; }
@@ -366,6 +376,7 @@ export class GameScene extends Phaser.Scene {
   _levelComplete() {
     if (this._transitioning) return;
     this._transitioning = true;
+    this.time.timeScale = 1.0;
     this.scene.start('LevelCompleteScene', {
       level: this._currentLevel,
       score: this._scoreSystem.getScore(),
@@ -376,6 +387,7 @@ export class GameScene extends Phaser.Scene {
   _gameOver() {
     if (this._transitioning) return;
     this._transitioning = true;
+    this.time.timeScale = 1.0;
     this._soundManager.play('game_over');
     this.scene.start('GameOverScene', {
       score: this._scoreSystem.getScore(),

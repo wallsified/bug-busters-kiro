@@ -51,7 +51,7 @@ export class EffectsManager {
    */
   spawnParticleBurst(x, y) {
     try {
-      const particles = this._scene.add.particles(x, y, 'projectile', {
+      const particles = this._scene.add.particles(x, y, 'bomb', {
         speed: { min: 50, max: 150 },
         scale: { start: 0.5, end: 0 },
         lifespan: 400,
@@ -72,18 +72,18 @@ export class EffectsManager {
    * @param {Phaser.GameObjects.Sprite} sprite - El sprite al que se aplica el parpadeo.
    */
   startDamageBlink(sprite) {
-    // Detener el tween activo si existe para evitar conflictos
     if (this._blinkTween) {
       this._blinkTween.stop();
+      this._blinkTween = null;
     }
-    // Crear el tween de parpadeo con la duración de invencibilidad configurada
+    if (!this._scene || !this._scene.tweens) return;
     this._blinkTween = this._scene.tweens.add({
       targets: sprite,
       alpha: 0.15,
       duration: 100,
       yoyo: true,
       repeat: Math.floor(CONSTANTS.INVINCIBILITY_DURATION / 200) - 1,
-      onComplete: () => { sprite.alpha = 1.0; },
+      onComplete: () => { if (sprite && sprite.active !== false) sprite.alpha = 1.0; },
     });
   }
 
@@ -91,11 +91,12 @@ export class EffectsManager {
    * Activa el efecto de hit-stop: congela brevemente la escala de tiempo.
    */
   triggerHitStop() {
+    if (!this._scene || !this._scene.time) return;
     // Reducir la escala de tiempo para el efecto de freeze frame
     this._scene.time.timeScale = 0.05;
     // Restaurar la escala de tiempo tras la duración configurada
     this._scene.time.delayedCall(CONSTANTS.HIT_STOP_DURATION, () => {
-      this._scene.time.timeScale = 1.0;
+      if (this._scene && this._scene.time) this._scene.time.timeScale = 1.0;
     });
   }
 

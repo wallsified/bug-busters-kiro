@@ -36,7 +36,7 @@ export class Bug extends BaseSprite {
     this.scene = scene;
 
     // Almacenar la clave de textura para acceso en pruebas y lógica de juego
-    this.texture = texture;
+    this.textureKey = texture;
 
     // Registrar el sprite en la escena y habilitar la física
     if (scene && scene.add) {

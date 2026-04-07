@@ -82,5 +82,5 @@ test('Wanderer se crea con la clave de textura "wanderer"', () => {
   const scene = createMockScene(0);
   const wanderer = new Wanderer(scene, 100, 200);
   // La clave de textura se pasa al constructor de Bug como tercer argumento
-  expect(wanderer.texture).toBe('wanderer');
+  expect(wanderer.textureKey).toBe('wanderer');
 });
